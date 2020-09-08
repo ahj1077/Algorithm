@@ -1,51 +1,60 @@
 #include<iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
+#include<algorithm>
+#include<string>
 #include<queue>
-#include<cmath>
+#include<vector>
+#include<stack>
+#include<map>
 
 using namespace std;
 
+
 class node {
 public:
+	int r;
+	int c;
 	int num;
-	int col;
-	node *left;
-	node *right;
 
-	node(int c, int n) : col(c), num(n) {
+	node* left;
+	node* right;
+
+	node(int _r, int _c, int _num) : r(_r), c(_c), num(_num) {
 		left = NULL;
 		right = NULL;
-	}
+	};
 };
 
 class tree {
 public:
 	node *root;
-	tree() {
-		root = NULL;
-	}
 };
 
+bool cmp(pair<pair<int, int>, int> p1, pair<pair<int, int>, int> p2){
+	if (p1.first.first > p2.first.first)
+		return true;
+	else if (p1.first.first == p2.first.first) {
+		return p1.first.second < p2.first.second;
+	}
+	else {
+		return false;
+	}
+}
 
-tree t;
-vector<node> v[100001];
-vector<int> preorder_v;
-vector<int> postorder_v;
-int h = 0;
+tree *t;
+
+vector<int> pre;
+vector<int> post;
 
 void preorder(node *n) {
 
+	pre.push_back(n->num);
+
 	if (n->left != NULL) {
-		preorder_v.push_back(n->left->num);
 		preorder(n->left);
 	}
 	if (n->right != NULL) {
-		preorder_v.push_back(n->right->num);
 		preorder(n->right);
 	}
-
 }
 
 void postorder(node *n) {
@@ -56,56 +65,57 @@ void postorder(node *n) {
 	if (n->right != NULL) {
 		postorder(n->right);
 	}
-	postorder_v.push_back(n->num);
+	post.push_back(n->num);
 }
+
+void add(node* parent, node* child) {
+
+	if (child->c < parent->c) {
+		if (parent->left != NULL) {
+			add(parent->left, child);
+		}
+		else {
+			parent->left = child;
+		}
+	}
+	else {
+		if (parent->right != NULL) {
+			add(parent->right, child);
+		}
+		else {
+			parent->right = child;
+		}
+	}
+	
+}
+
 
 vector<vector<int>> solution(vector<vector<int>> nodeinfo) {
 	vector<vector<int>> answer;
+	vector<pair<pair<int,int>, int>> v;
 
 	for (int i = 0; i < nodeinfo.size(); i++) {
-		if (nodeinfo.at(i).at(1) > h)
-			h = nodeinfo.at(i).at(1);
-
-		v[nodeinfo.at(i).at(1)].push_back(node(nodeinfo.at(i).at(0), i + 1));
+		v.push_back({ {nodeinfo[i][1], nodeinfo[i][0]},i + 1 });
 	}
 
-	node *n = new node(v[h].at(0).col, v[h].at(0).num);
-	t.root = n;
+	sort(v.begin(), v.end(), cmp);
 
-	for (int i = h - 1; i >= 0; i--) {
-		for (int j = 0; j < v[i].size(); j++) {
+	t = new tree();
 
-			node *cur = t.root;
-			int nodenum = v[i].at(j).num;
-			int nodecol = v[i].at(j).col;
+	t->root = new node(v[0].first.first, v[0].first.second, v[0].second);
 
-			while (1) {
-				if (nodecol < cur->col) {
-					if (cur->left == NULL) {
-						node *n = new node(nodecol, nodenum);
-						cur->left = n;
-						break;
-					}
-					cur = cur->left;
-				}
-				else {
-					if (cur->right == NULL) {
-						node *n = new node(nodecol, nodenum);
-						cur->right = n;
-						break;
-					}
-					cur = cur->right;
-				}
-			}
-		}
+	for (int i = 1; i < v.size(); i++) {
+		int num = v[i].second;
+		int r = v[i].first.first;
+		int c = v[i].first.second;
+
+		add(t->root, new node(r, c, num));
 	}
 
-	preorder_v.push_back(t.root->num);
-	preorder(t.root);
-	postorder(t.root);
-
-	answer.push_back(preorder_v);
-	answer.push_back(postorder_v);
+	preorder(t->root);
+	postorder(t->root);
+	answer.push_back(pre);
+	answer.push_back(post);
 
 	return answer;
 }
@@ -113,56 +123,9 @@ vector<vector<int>> solution(vector<vector<int>> nodeinfo) {
 int main() {
 	ios::sync_with_stdio(false);
 	cin.tie(NULL);
-	
-	vector<vector<int>> para;
-	vector<int> p;
-	p.push_back(5);
-	p.push_back(3);
-	para.push_back(p);
-	p.clear();
 
-	p.push_back(11);
-	p.push_back(5);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(13);
-	p.push_back(3);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(3);
-	p.push_back(5);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(6);
-	p.push_back(1);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(1);
-	p.push_back(3);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(8);
-	p.push_back(6);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(7);
-	p.push_back(2);
-	para.push_back(p);
-	p.clear();
-
-	p.push_back(2);
-	p.push_back(2);
-	para.push_back(p);
-	p.clear();
-
-	para = solution(para);
-
+	vector<vector<int>> param = { {5, 3},{11, 5},{13, 3},{3, 5},{6, 1},{1, 3},{8, 6},{7, 2},{2, 2} };
+	vector<vector<int>> ret = solution(param);
 
 	return 0;
 }
